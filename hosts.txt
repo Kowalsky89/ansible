@@ -1,0 +1,2 @@
+[AWS]
+AWSWEB ansible_host=3.14.112.146
