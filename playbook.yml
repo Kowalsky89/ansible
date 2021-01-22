@@ -1,20 +1,68 @@
 ---
 - name: Install soft & upload web page
-  hosts: all
+  hosts: AWS
+  debugger: on_failed
   become: yes
   vars:
-    source: https://github.com/Kowalsky89/ansible/index.html
-    destination: /var/www
+    source1: /home/kent/.ssh/id_ed25519
+    destination: /var/www/.ssh/
   tasks:
+  - name: Install aptitude package
+    apt:
+      name: aptitude
+      force_apt_get: yes
+  - name: Update cache & upgrade
+    apt:
+      upgrade: yes
+      update_cache: yes
   - name: Install soft
-    apt: name=nginx state=latest
-    apt: name=zsh state=latest
-    apt: name=wget state=latest
-  - name: Get web page
-    get_url: url={{source}} dest={{destination}}
+    apt:
+      pkg: 
+      - nginx
+      - zsh
+      - wget
+      - git
+      state: latest
+  - name: Ensure /var/www/html directory has correct permissions.
+    file:
+      path: /var/www/html
+      state: directory
+      owner: www-data
+      group: www-data
+  - name: Create /var/www/.ssh directory
+    file:
+      path: /var/www/.ssh
+      state: directory
+      owner: www-data
+      group: www-data
+      mode: 0700
+  - name: Ensure GitHub deploy key is present on the server.
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: 0600
+      owner: root
+      group: root
+    loop:
+      - {src: '/home/kent/.ssh/id_rsa', dest: '/root/.ssh/id_rsa'}
+      - {src: '/home/kent/.ssh/id_rsa.pub', dest: '/root/.ssh/id_rsa.pub'}
+  - name: Clean /var/www/html
+    file:
+      state: absent
+      path: "/var/www/html/"
+  - name: Clone the private repository
+    git:
+      repo: 'ssh://git@github.com/Kowalsky89/webpage.git'
+      dest: /var/www/html
+      accept_hostkey: yes
+      key_file: /root/.ssh/id_rsa
     notify: Restart nginx
   - name: Start nginx & make it enabled on boot
     service: name=nginx state=started enabled=yes
+  - name: Write backup script for each app
+    shell: |
+      echo 'fs.file-max=1204000
+      net.core.somaxconn=65535' >> /etc/sysctl.conf
   handlers:
   - name: Restart nginx
     service: name=nginx state=restarted
