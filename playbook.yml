@@ -3,9 +3,9 @@
   hosts: AWS
   debugger: on_failed
   become: yes
-  vars:
-    source1: /home/kent/.ssh/id_ed25519
-    destination: /var/www/.ssh/
+#  vars:
+#    source1: /home/kent/.ssh/id_ed25519
+#    destination: /var/www/.ssh/
   tasks:
   - name: Install aptitude package
     apt:
@@ -29,14 +29,7 @@
       state: directory
       owner: www-data
       group: www-data
-  - name: Create /var/www/.ssh directory
-    file:
-      path: /var/www/.ssh
-      state: directory
-      owner: www-data
-      group: www-data
-      mode: 0700
-  - name: Ensure GitHub deploy key is present on the server.
+   - name: Ensure GitHub deploy key is present on the server.
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
