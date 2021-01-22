@@ -3,9 +3,6 @@
   hosts: AWS
   debugger: on_failed
   become: yes
-#  vars:
-#    source1: /home/kent/.ssh/id_ed25519
-#    destination: /var/www/.ssh/
   tasks:
   - name: Install aptitude package
     apt:
